@@ -8,5 +8,5 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'tilt', ['>= 1.3.3']
 
-  s.files = Dir["#{File.dirname(__FILE__)}/*/**"]
+  s.files = Dir["#{File.dirname(__FILE__)}/*/**/*"]
 end
