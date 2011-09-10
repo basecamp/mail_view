@@ -16,6 +16,8 @@ Install
 
     rails plugin install https://github.com/37signals/mail_view.git
 
+    # Gemfile
+    gem 'tilt', :group => :development
 
 Usage
 -----
