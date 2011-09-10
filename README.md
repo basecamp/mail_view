@@ -3,6 +3,20 @@ MailView -- Visual email testing
 
 Preview plain text and html mail templates in your browser without redelivering it every time you make a change.
 
+Install
+-------
+### As gem:
+
+    gem install mail_view
+
+    # Gemfile
+    gem 'mail_view', :group => :development
+
+### As plugin
+
+    rails plugin install https://github.com/37signals/mail_view.git
+
+
 Usage
 -----
 
