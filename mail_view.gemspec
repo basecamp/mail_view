@@ -6,5 +6,7 @@ Gem::Specification.new do |s|
   s.summary = 'Visual email testing'
   s.homepage = 'https://github.com/37signals/mail_view'
 
-  s.files = Dir["#{File.dirname(__FILE__)}/*/**"]
+  s.files = Dir["#{File.dirname(__FILE__)}/lib/**"] + 
+    Dir["#{File.dirname(__FILE__)}/lib/mail_view/**"] + 
+    Dir["#{File.dirname(__FILE__)}/test/**"]
 end
