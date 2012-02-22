@@ -4,7 +4,7 @@ require 'rack/test'
 require 'mail_view'
 require 'mail'
 
-require 'tmail'
+require 'tmail' unless RUBY_VERSION >= '1.9'
 
 class TestMailView < Test::Unit::TestCase
   include Rack::Test::Methods
@@ -82,65 +82,104 @@ class TestMailView < Test::Unit::TestCase
     assert last_response.not_found?
   end
 
-  def test_plain_text_message
+  def test_plain_text_message_layout
     get '/plain_text_message'
+    assert last_response.ok?
+    assert includes_iframe('/mail_content/plain_text_message', last_response.body)
+  end
+
+  def test_plain_text_message_content
+    get '/mail_content/plain_text_message'
     assert last_response.ok?
 
     assert_match(/Hello/, last_response.body)
   end
 
-  def test_html_message
+  def test_html_message_layout
     get '/html_message'
     assert last_response.ok?
-
-    assert_match(/<h1>Hello<\/h1>/, last_response.body)
+    assert includes_iframe('/mail_content/html_message', last_response.body)
   end
 
-  def test_nested_multipart_message
-    get '/nested_multipart_message'
+  def test_html_message_content
+    get '/mail_content/html_message'
     assert last_response.ok?
 
     assert_match(/<h1>Hello<\/h1>/, last_response.body)
   end
 
-  def test_multipart_alternative
+  def test_nested_multipart_message_as_html
+    get '/mail_content/nested_multipart_message'
+    assert last_response.ok?
+
+    assert_match(/<h1>Hello<\/h1>/, last_response.body)
+  end
+
+  def test_multipart_alternative_layout
     get '/multipart_alternative'
     assert last_response.ok?
 
-    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+    assert includes_iframe('/mail_content/multipart_alternative.html', last_response.body)
     assert_match(/View plain text version/, last_response.body)
   end
 
-  def test_multipart_alternative_as_html
+  def test_multipart_alternative_content
+    get '/mail_content/multipart_alternative'
+    assert last_response.ok?
+
+    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+  end
+
+  def test_multipart_alternative_layout_as_html
     get '/multipart_alternative.html'
     assert last_response.ok?
 
-    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+    assert includes_iframe('/mail_content/multipart_alternative.html', last_response.body)
     assert_match(/View plain text version/, last_response.body)
   end
 
-  def test_multipart_alternative_as_text
+  def test_multipart_alternative_content_as_html
+    get '/mail_content/multipart_alternative.html'
+    assert last_response.ok?
+
+    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+  end
+
+  def test_multipart_alternative_layout_as_text
     get '/multipart_alternative.txt'
     assert last_response.ok?
 
-    assert_match(/This is plain text/, last_response.body)
+    assert includes_iframe('/mail_content/multipart_alternative.txt', last_response.body)
     assert_match(/View HTML version/, last_response.body)
   end
 
-  unless RUBY_VERSION >= '1.9'
-    def test_tmail_html_message
-      get '/tmail_html_message'
-      assert last_response.ok?
+  def test_multipart_alternative_content_as_text
+    get '/mail_content/multipart_alternative.txt'
+    assert last_response.ok?
 
+    assert_match(/This is plain text/, last_response.body)
+  end
+
+  unless RUBY_VERSION >= '1.9'
+    def test_tmail_html_message_content
+      get '/mail_content/tmail_html_message'
+
+      assert last_response.ok?
       assert_match(/<h1>Hello<\/h1>/, last_response.body)
     end
 
-    def test_tmail_multipart_alternative
-      get '/tmail_multipart_alternative'
-      assert last_response.ok?
+    def test_tmail_multipart_alternative_content
+      get '/mail_content/tmail_multipart_alternative'
 
+      assert last_response.ok?
       assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
       assert_match(/View plain text version/, last_response.body)
     end
+  end
+
+private
+
+  def includes_iframe(source, string)
+    string =~ /iframe src=\"#{source}\"/
   end
 end
