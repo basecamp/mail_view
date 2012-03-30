@@ -43,7 +43,7 @@ Routing
 A mini router middleware is bundled for Rails 2.x support.
 
     # config/environments/development.rb
-    config.middleware.use MailView::Mapper, Notifier::Preview
+    config.middleware.use MailView::Mapper, [Notifier::Preview]
 
 For Rails³ you can map the app inline in your routes config.
 
