@@ -21,6 +21,7 @@ class MailView
   end
 
   def call(env)
+    @rack_env = env
     path_info = env["PATH_INFO"]
 
     if path_info == "" || path_info == "/"
