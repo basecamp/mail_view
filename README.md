@@ -22,7 +22,8 @@ Since most emails do something interesting with database data, you'll need to wr
         def invitation
           account = Account.first
           inviter, invitee = account.users[0, 2]
-          Notifier.invitation(inviter, invitee)
+          Notifier.invitation(inviter, invitee) 
+          # ::Notifier.invitation(inviter, invitee)  # May need to call with '::'
         end
 
         # Factory-like pattern
