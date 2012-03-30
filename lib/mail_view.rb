@@ -24,10 +24,9 @@ class MailView
     path_info = env["PATH_INFO"]
 
     if path_info == "" || path_info == "/"
-      links = self.actions.inject({}) { |h, action|
-        h[action] = "#{env["SCRIPT_NAME"]}/#{action}"
-        h
-      }
+      links = self.actions.map do |action|
+        [action, "#{env["SCRIPT_NAME"]}/#{action}"]
+      end
 
       ok index_template.render(Object.new, :links => links)
     elsif path_info =~ /([\w_]+)(\.\w+)?$/
