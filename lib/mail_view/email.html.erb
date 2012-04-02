@@ -60,6 +60,11 @@
     <dt>From:</dt>
     <dd><%= mail.from %></dd>
 
+    <% if mail.reply_to %>
+      <dt>Reply-To:</dt>
+      <dd><%= mail.reply_to %></dd>
+    <% end %>
+
     <dt>Subject:</dt>
     <dd><strong><%= mail.subject %></strong></dd>
 
