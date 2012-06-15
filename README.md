@@ -39,7 +39,7 @@ Since most emails do something interesting with database data, you'll need to wr
         def welcome
           user = User.create!
           mail = Notifier.welcome(user)
-          user.destory
+          user.destroy
           mail
         end
       end
