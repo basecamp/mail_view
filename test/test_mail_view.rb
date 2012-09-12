@@ -48,6 +48,20 @@ class TestMailView < Test::Unit::TestCase
     def tmail_multipart_alternative
       TMail::Mail.parse(multipart_alternative.to_s)
     end
+
+    def nested_multipart_message
+      container = Mail::Part.new
+      container.content_type = 'multipart/alternative'
+      container.text_part { body 'omg' }
+      container.html_part do
+        content_type 'text/html; charset=UTF-8'
+        body '<h1>Hello</h1>'
+      end
+
+      mail = Mail.new
+      mail.add_part container
+      mail
+    end
   end
 
   def app
@@ -77,6 +91,13 @@ class TestMailView < Test::Unit::TestCase
 
   def test_html_message
     get '/html_message'
+    assert last_response.ok?
+
+    assert_match(/<h1>Hello<\/h1>/, last_response.body)
+  end
+
+  def test_nested_multipart_message
+    get '/nested_multipart_message'
     assert last_response.ok?
 
     assert_match(/<h1>Hello<\/h1>/, last_response.body)
