@@ -8,5 +8,9 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'tilt'
 
+  s.add_development_dependency 'rack-test', '~> 0.6'
+  s.add_development_dependency 'mail',      '~> 2.2'
+  s.add_development_dependency 'tmail',     '~> 1.2'
+
   s.files = Dir["#{File.dirname(__FILE__)}/**/*"]
 end
