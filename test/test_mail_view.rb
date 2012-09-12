@@ -106,18 +106,20 @@ class TestMailView < Test::Unit::TestCase
     assert_match(/View HTML version/, last_response.body)
   end
 
-  def test_tmail_html_message
-    get '/tmail_html_message'
-    assert last_response.ok?
+  unless RUBY_VERSION >= '1.9'
+    def test_tmail_html_message
+      get '/tmail_html_message'
+      assert last_response.ok?
 
-    assert_match(/<h1>Hello<\/h1>/, last_response.body)
-  end
+      assert_match(/<h1>Hello<\/h1>/, last_response.body)
+    end
 
-  def test_tmail_multipart_alternative
-    get '/tmail_multipart_alternative'
-    assert last_response.ok?
+    def test_tmail_multipart_alternative
+      get '/tmail_multipart_alternative'
+      assert last_response.ok?
 
-    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
-    assert_match(/View plain text version/, last_response.body)
+      assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+      assert_match(/View plain text version/, last_response.body)
+    end
   end
 end
