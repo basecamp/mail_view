@@ -1,0 +1,86 @@
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=<%= body_part.charset %>" />
+</head>
+<style type="text/css">
+  #message_headers {
+    width: 100%;
+    padding: 10px 0 0 0;
+    margin: 0;
+    background: #fff;
+    font-size: 12px;
+    font-family: "Lucida Grande";
+    border-bottom: 1px solid #dedede;
+    overflow: hidden;
+  }
+
+  #message_headers dl {
+    float: left;
+    margin: 0 0 10px 0;
+    padding: 0;
+  }
+
+  #message_headers dt {
+    width: 62px;
+    padding: 1px;
+    float: left;
+    text-align: right;
+    font-weight: bold;
+    color: #7f7f7f;
+  }
+
+  #message_headers dd {
+    margin-left: 72px;
+    padding: 1px;
+  }
+
+  #message_headers p.alternate {
+    float: right;
+    margin: 0;
+  }
+
+  #message_headers p.alternate a {
+    color: #09c;
+  }
+
+  pre#message_body {
+    padding: 10px;
+    white-space: pre-wrap;
+  }
+
+  iframe {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+</style>
+<div id="message_headers">
+  <dl>
+    <dt>From:</dt>
+    <dd><%= mail.from %></dd>
+
+    <% if mail.reply_to %>
+      <dt>Reply-To:</dt>
+      <dd><%= mail.reply_to %></dd>
+    <% end %>
+
+    <dt>Subject:</dt>
+    <dd><strong><%= mail.subject %></strong></dd>
+
+    <dt>Date:</dt>
+    <dd><%= Time.now.strftime("%b %e, %Y %I:%M:%S %p %Z") %></dd>
+
+    <dt>To:</dt>
+    <dd><%= mail.to %></dd>
+  </dl>
+
+  <% if mail.multipart? %>
+    <p class="alternate">
+      <% if body_part.content_type && body_part.content_type.match(/text\/html/) %>
+        <a href="<%= name %>.txt">View plain text version</a>
+      <% else %>
+        <a href="<%= name %>.html">View HTML version</a>
+      <% end %>
+    </p>
+  <% end %>
+</div>
+<iframe src="<%= mail_link %>" height="100%" width="100%"></iframe>

@@ -5,13 +5,14 @@ PATH
       tilt
 
 GEM
+  remote: http://rubygems.org/
   specs:
     i18n (0.6.1)
     mail (2.4.4)
       i18n (>= 0.4.0)
       mime-types (~> 1.16)
       treetop (~> 1.4.8)
-    mime-types (1.19)
+    mime-types (1.17.2)
     polyglot (0.3.3)
     rack (1.4.1)
     rack-test (0.6.1)

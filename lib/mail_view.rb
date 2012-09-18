@@ -7,6 +7,10 @@ class MailView
   autoload :Mapper, 'mail_view/mapper'
 
   class << self
+    def default_layout_template_path
+      File.expand_path('../mail_view/layout.html.erb', __FILE__)
+    end
+
     def default_email_template_path
       File.expand_path('../mail_view/email.html.erb', __FILE__)
     end
@@ -30,12 +34,20 @@ class MailView
       end
 
       ok index_template.render(Object.new, :links => links)
-    elsif path_info =~ /([\w_]+)(\.\w+)?$/
-      name   = $1
-      format = $2 || ".html"
+    elsif path_info =~ /(mail_content|)\/([\w_]+)(\.\w+)?$/
+      display_mail = $1
+      name   = $2
+      format = $3 || ".html"
 
       if actions.include?(name)
-        ok render_mail(name, send(name), format)
+        mail = send(name)
+        if display_mail != ''
+          ok render_mail(name, mail, format)
+        else
+          link = [env["SCRIPT_NAME"], 'mail_content', name].join('/')
+          link << format if mail.multipart?
+          ok render_layout(name, mail, link, format)
+        end
       else
         not_found
       end
@@ -47,6 +59,14 @@ class MailView
   protected
     def actions
       public_methods(false).map(&:to_s) - ['call']
+    end
+
+    def layout_template
+      Tilt.new(layout_template_path)
+    end
+
+    def layout_template_path
+      self.class.default_layout_template_path
     end
 
     def email_template
@@ -78,14 +98,21 @@ class MailView
       end
     end
 
-    def render_mail(name, mail, format = nil)
-      body_part = mail
+    def render_layout(name, mail, mail_link, format = nil)
+      layout_template.render(Object.new, :name => name, :mail => mail, :mail_link => mail_link, :body_part => body_part(mail, format))
+    end
 
+    def render_mail(name, mail, format = nil)
+      email_template.render(Object.new, :name => name, :mail => mail, :body_part => body_part(mail, format))
+    end
+
+    def body_part(mail, format = nil)
+      body_part = mail
       if mail.multipart?
         content_type = Rack::Mime.mime_type(format)
         body_part = mail.all_parts.find { |part| part.content_type.match(content_type) } || mail.parts.first
       end
 
-      email_template.render(Object.new, :name => name, :mail => mail, :body_part => body_part)
+      body_part
     end
 end
