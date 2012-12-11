@@ -10,6 +10,8 @@ Add the gem to your `Gemfile`:
 
 ```ruby
   gem 'mail_view', :git => 'https://github.com/37signals/mail_view.git'
+  # or
+  gem "mail_view", "~> 1.0.3"
 ```
 
 And run `bundle install`.
