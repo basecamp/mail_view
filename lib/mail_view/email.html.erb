@@ -49,12 +49,9 @@
 </style>
 <div id="message_headers">
   <dl>
-    <% if mail.respond_to? :smtp_envelope_from %>
+    <% if mail.respond_to?(:smtp_envelope_from) && mail.from != mail.smtp_envelope_from %>
       <dt>SMTP-From:</dt>
       <dd><%= mail.smtp_envelope_from %></dd>
-
-      <dt>SMTP-To:</dt>
-      <dd><%= mail.smtp_envelope_to %></dd>
     <% end %>
 
     <dt>From:</dt>
@@ -70,6 +67,11 @@
 
     <dt>Date:</dt>
     <dd><%= Time.now.strftime("%b %e, %Y %I:%M:%S %p %Z") %></dd>
+
+    <% if mail.respond_to?(:smtp_envelope_to) && mail.to != mail.smtp_envelope_to %>
+      <dt>SMTP-To:</dt>
+      <dd><%= mail.smtp_envelope_to %></dd>
+    <% end %>
 
     <dt>To:</dt>
     <dd><%= mail.to %></dd>
