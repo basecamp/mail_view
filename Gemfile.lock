@@ -5,6 +5,7 @@ PATH
       tilt
 
 GEM
+  remote: http://rubygems.org/
   specs:
     i18n (0.6.1)
     mail (2.4.4)
