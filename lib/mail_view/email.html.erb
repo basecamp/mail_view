@@ -48,6 +48,16 @@
   }
 </style>
 <div id="message_headers">
+  <% if mail.respond_to? :smtp_envelope_from %>
+    <dl>
+      <dt>SMTP From:</dt>
+      <dd><%= mail.smtp_envelope_from %></dd>
+
+      <dt>SMTP To:</dt>
+      <dd><%= mail.smtp_envelope_to %></dd>
+    </dl>
+  <% end %>
+
   <dl>
     <dt>From:</dt>
     <dd><%= mail.from %></dd>
