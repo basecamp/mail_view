@@ -2,26 +2,31 @@
   <meta http-equiv="Content-Type" content="text/html; charset=<%= body_part.charset %>" />
 </head>
 <style type="text/css">
+  * { margin: 0; padding: 0; }
+
+  body {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    padding: 20px;
+  }
+
   #message_headers {
-    width: 100%;
-    padding: 10px 0 0 0;
-    margin: 0;
-    background: #fff;
-    font-size: 12px;
-    font-family: "Lucida Grande";
-    border-bottom: 1px solid #dedede;
-    overflow: hidden;
+    background: white;
+    font: 12px/16px "Lucida Grande";
   }
 
   #message_headers dl {
-    float: left;
-    margin: 0 0 10px 0;
-    padding: 0;
+    display: block;
+    border-bottom: 1px solid #dedede;
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    overflow: hidden;
   }
 
   #message_headers dt {
-    width: 80px;
-    padding: 1px;
+    width: 60px;
     float: left;
     text-align: right;
     font-weight: bold;
@@ -29,24 +34,31 @@
   }
 
   #message_headers dd {
-    margin-left: 90px;
-    padding: 1px;
+    margin-left: 70px; /* 60px + 10px */
   }
 
   #message_headers p.alternate {
-    float: right;
-    margin: 0;
+    position: absolute;
+    top: 20px;
+    right: 20px;
   }
 
   #message_headers p.alternate a {
     color: #09c;
   }
 
+  iframe#message_body {
+    border: 0;
+    width: 100%;
+    -webkit-flex: 1 1 auto;
+    flex: 1 1 auto;
+  }
+
   pre#message_body {
-    padding: 10px;
     white-space: pre-wrap;
   }
 </style>
+
 <div id="message_headers">
   <dl>
     <% if mail.respond_to?(:smtp_envelope_from) && mail.from != mail.smtp_envelope_from %>
@@ -89,7 +101,7 @@
 </div>
 
 <% if body_part.content_type && body_part.content_type.match(/text\/html/) %>
-  <%= body_part.body %>
+<iframe id="message_body" src="<%= body_only_path %>"></iframe>
 <% else %>
 <pre id="message_body"><%= body_part.body %></pre>
 <% end %>
