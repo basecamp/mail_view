@@ -56,7 +56,7 @@ A mini router middleware is bundled for Rails 2.x support.
 
 ```ruby
   # config/environments/development.rb
-  config.middleware.use MailView::Mapper, [MailPreview]
+  config.middleware.use MailView::Mapper, [MailView]
 ```
 
 For Rails³ you can map the app inline in your routes config.
@@ -64,7 +64,7 @@ For Rails³ you can map the app inline in your routes config.
 ```ruby
   # config/routes.rb
   if Rails.env.development?
-    mount MailPreview => 'mail_view'
+    mount MailView => 'mail_view'
   end
 ```
 
