@@ -46,7 +46,7 @@ class MailView
 
   protected
     def actions
-      public_methods(false).map(&:to_s) - ['call']
+      public_methods(false).map(&:to_s).sort - ['call']
     end
 
     def email_template
