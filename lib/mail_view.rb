@@ -32,7 +32,7 @@ class MailView
       ok index_template.render(Object.new, :links => links)
     elsif path_info =~ /([\w_]+)(\.\w+)?$/
       name   = $1
-      format = $2 || ".html"
+      format = $2
 
       if actions.include?(name)
         ok render_mail(name, send(name), format)
@@ -82,12 +82,12 @@ class MailView
       body_part = mail
 
       if mail.multipart?
-        content_type = Rack::Mime.mime_type(format)
-        body_part = if mail.respond_to?(:all_parts)
-                      mail.all_parts.find { |part| part.content_type.match(content_type) } || mail.parts.first
-                    else
-                      mail.parts.find { |part| part.content_type.match(content_type) } || mail.parts.first
-                    end
+        parts = mail.respond_to?(:all_parts) ? mail.all_parts : mail.parts
+        if format && content_type = Rack::Mime.mime_type(format)
+          body_part = parts.find { |part| part.content_type.match(content_type) }
+        else
+          body_part = parts.last
+        end
       end
 
       email_template.render(Object.new, :name => name, :mail => mail, :body_part => body_part)
