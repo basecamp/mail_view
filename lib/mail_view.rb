@@ -81,6 +81,8 @@ class MailView
     def render_mail(name, mail, format = nil)
       body_part = mail
 
+      puts body_part.inspect
+
       if mail.multipart?
         content_type = Rack::Mime.mime_type(format)
         body_part = if mail.respond_to?(:all_parts)
