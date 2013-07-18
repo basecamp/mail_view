@@ -79,6 +79,8 @@ class MailView
     end
 
     def render_mail(name, mail, format = nil)
+      Mail.inform_interceptors(mail) if defined? Mail
+
       body_part = mail
 
       if mail.multipart?
