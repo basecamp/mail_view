@@ -68,6 +68,10 @@ class TestMailView < Test::Unit::TestCase
     Preview
   end
 
+  def iframe_src_match(action)
+    /<iframe[^>]* src="#{Regexp.escape(action)}"[^>]*><\/iframe>/
+  end
+
   def test_index
     get '/'
     assert last_response.ok?
@@ -85,38 +89,49 @@ class TestMailView < Test::Unit::TestCase
   def test_plain_text_message
     get '/plain_text_message'
     assert last_response.ok?
-
     assert_match(/Hello/, last_response.body)
   end
 
   def test_html_message
     get '/html_message'
     assert last_response.ok?
+    assert_match(iframe_src_match('/html_message.html?body=1'), last_response.body)
 
+    get '/html_message.html?body=1'
+    assert last_response.ok?
     assert_match(/<h1>Hello<\/h1>/, last_response.body)
   end
 
   def test_nested_multipart_message
     get '/nested_multipart_message'
     assert last_response.ok?
+    assert_match(iframe_src_match('/nested_multipart_message.html?body=1'), last_response.body)
 
+    get '/nested_multipart_message?body=1'
+    assert last_response.ok?
     assert_match(/<h1>Hello<\/h1>/, last_response.body)
   end
 
   def test_multipart_alternative
     get '/multipart_alternative'
     assert last_response.ok?
-
-    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+    assert_match(iframe_src_match('/multipart_alternative.html?body=1'), last_response.body)
     assert_match(/View plain text version/, last_response.body)
+
+    get '/multipart_alternative.html?body=1'
+    assert last_response.ok?
+    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
   end
 
   def test_multipart_alternative_as_html
     get '/multipart_alternative.html'
     assert last_response.ok?
-
-    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+    assert_match(iframe_src_match('/multipart_alternative.html?body=1'), last_response.body)
     assert_match(/View plain text version/, last_response.body)
+
+    get '/multipart_alternative.html?body=1'
+    assert last_response.ok?
+    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
   end
 
   def test_multipart_alternative_as_text
@@ -131,16 +146,22 @@ class TestMailView < Test::Unit::TestCase
     def test_tmail_html_message
       get '/tmail_html_message'
       assert last_response.ok?
+      assert_match(iframe_src_match('/tmail_html_message.html?body=1'), last_response.body)
 
+      get '/tmail_html_message.html?body=1'
+      assert last_response.ok?
       assert_match(/<h1>Hello<\/h1>/, last_response.body)
     end
 
     def test_tmail_multipart_alternative
       get '/tmail_multipart_alternative'
       assert last_response.ok?
-
-      assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
       assert_match(/View plain text version/, last_response.body)
+      assert_match(iframe_src_match('/tmail_multipart_alternative.html?body=1'), last_response.body)
+
+      get '/tmail_multipart_alternative.html?body=1'
+      assert last_response.ok?
+      assert_match(/<h1>Hello<\/h1>/, last_response.body)
     end
   end
 end
