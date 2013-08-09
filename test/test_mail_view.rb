@@ -3,8 +3,8 @@ require 'rack/test'
 
 require 'mail_view'
 require 'mail'
-
 require 'tmail'
+require 'cgi'  # For CGI.unescapeHTML
 
 class TestMailView < Test::Unit::TestCase
   include Rack::Test::Methods
@@ -15,6 +15,19 @@ class TestMailView < Test::Unit::TestCase
         to 'josh@37signals.com'
         body 'Hello'
       end
+    end
+
+    def plain_text_message_with_display_names
+      Mail.new do
+        to 'Josh Peek <josh@37signals.com>'
+        from 'Test Peek <test@foo.com>'
+        reply_to 'Another Peek <another@foo.com>'
+        body 'Hello'
+      end
+    end
+
+    def tmail_plain_text_message_with_display_names
+      TMail::Mail.parse(plain_text_message_with_display_names.to_s)
     end
 
     def html_message
@@ -72,6 +85,10 @@ class TestMailView < Test::Unit::TestCase
     /<iframe[^>]* src="#{Regexp.escape(action)}"[^>]*><\/iframe>/
   end
 
+  def unescaped_body
+    CGI.unescapeHTML last_response.body
+  end
+
   def test_index
     get '/'
     assert last_response.ok?
@@ -90,6 +107,27 @@ class TestMailView < Test::Unit::TestCase
     get '/plain_text_message'
     assert last_response.ok?
     assert_match(/Hello/, last_response.body)
+  end
+
+  def test_plain_text_message_with_to_display_name
+    get '/plain_text_message_with_display_names'
+    assert last_response.ok?
+
+    assert_match(/Josh Peek <josh@37signals.com>/, unescaped_body)
+  end
+
+  def test_plain_text_message_with_from_display_name
+    get '/plain_text_message_with_display_names'
+    assert last_response.ok?
+
+    assert_match(/Test Peek <test@foo.com>/, unescaped_body)
+  end
+
+  def test_plain_text_message_with_reply_to_display_name
+    get '/plain_text_message_with_display_names'
+    assert last_response.ok?
+
+    assert_match(/Another Peek <another@foo.com>/, unescaped_body)
   end
 
   def test_html_message
@@ -163,5 +201,27 @@ class TestMailView < Test::Unit::TestCase
       assert last_response.ok?
       assert_match(/<h1>Hello<\/h1>/, last_response.body)
     end
+
+    def test_tmail_plain_text_message_with_to_display_name
+      get '/tmail_plain_text_message_with_display_names'
+      assert last_response.ok?
+
+      assert_match(/Josh Peek <josh@37signals.com>/, unescaped_body)
+    end
+
+    def test_tmail_plain_text_message_with_from_display_name
+      get '/tmail_plain_text_message_with_display_names'
+      assert last_response.ok?
+
+      assert_match(/Test Peek <test@foo.com>/, unescaped_body)
+    end
+
+    def test_tmail_plain_text_message_with_reply_to_display_name
+      get '/tmail_plain_text_message_with_display_names'
+      assert last_response.ok?
+
+      assert_match(/Another Peek <another@foo.com>/, unescaped_body)
+    end
+
   end
 end

@@ -68,11 +68,11 @@
     <% end %>
 
     <dt>From:</dt>
-    <dd><%= mail.from %></dd>
+    <dd><%= Rack::Utils.escape_html(mail.header['from'].to_s) %></dd>
 
     <% if mail.reply_to %>
       <dt>Reply-To:</dt>
-      <dd><%= mail.reply_to %></dd>
+      <dd><%= Rack::Utils.escape_html(mail.header['reply-to'].to_s) %></dd>
     <% end %>
 
     <dt>Subject:</dt>
@@ -87,7 +87,7 @@
     <% end %>
 
     <dt>To:</dt>
-    <dd><%= mail.to %></dd>
+    <dd><%= Rack::Utils.escape_html(mail.header['to'].to_s) %></dd>
   </dl>
 
   <% if mail.multipart? %>
