@@ -31,16 +31,17 @@ class MailView
 
       ok index_template.render(Object.new, :links => links)
 
-    elsif request.path_info =~ /([\w_]+)(\.\w+)?$/
-      name   = $1
-      format = $2 || ".html"
+    elsif request.path_info =~ /\A(.+?)([\w_]+)(\.\w+)?\z/
+      path   = $1
+      name   = $2
+      format = $3
 
       if actions.include?(name)
         mail = send(name)
         response = if request.params["body"]
                      render_mail_body(mail, format)
                    else
-                     render_mail(name, mail, format, request)
+                     render_mail(name, mail, path, format)
                    end
         ok response
       else
@@ -86,18 +87,14 @@ class MailView
       end
     end
 
-    def render_mail(name, mail, format, request)
-      path_with_format = if request.path =~ /#{Regexp.escape(format)}$/
-                           request.path
-                         else
-                           "#{request.path}#{format}"
-                         end
-
+    def render_mail(name, mail, path, format)
+      part = body_part(mail, format)
+      body_path = "#{path}#{name}.#{part.sub_type}?body=1"
       email_template.render(Object.new,
                             :name => name,
                             :mail => mail,
-                            :body_part => body_part(mail, format),
-                            :body_only_path => "#{path_with_format}?body=1")
+                            :body_part => part,
+                            :body_only_path => body_path)
     end
 
     def render_mail_body(mail, format)
@@ -108,12 +105,12 @@ class MailView
       part = mail
 
       if mail.multipart?
-        content_type = Rack::Mime.mime_type(format)
-        part = if mail.respond_to?(:all_parts)
-                 mail.all_parts.find { |part| part.content_type.match(content_type) } || mail.parts.first
-               else
-                 mail.parts.find { |part| part.content_type.match(content_type) } || mail.parts.first
-               end
+        parts = mail.respond_to?(:all_parts) ? mail.all_parts : mail.parts
+        if format && content_type = Rack::Mime.mime_type(format)
+          part = parts.find { |part| part.content_type.match(content_type) }
+        else
+          part = parts.last
+        end
       end
 
       part

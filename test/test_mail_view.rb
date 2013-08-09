@@ -58,6 +58,22 @@ class TestMailView < Test::Unit::TestCase
       end
     end
 
+    def multipart_alternative_text_default
+      Mail.new do
+        to 'josh@37signals.com'
+
+        html_part do
+          content_type 'text/html; charset=UTF-8'
+          body '<h1>This is HTML</h1>'
+        end
+
+        text_part do
+          body 'This is plain text'
+        end
+
+      end
+    end
+
     def tmail_multipart_alternative
       TMail::Mail.parse(multipart_alternative.to_s)
     end
@@ -174,6 +190,14 @@ class TestMailView < Test::Unit::TestCase
 
   def test_multipart_alternative_as_text
     get '/multipart_alternative.txt'
+    assert last_response.ok?
+
+    assert_match(/This is plain text/, last_response.body)
+    assert_match(/View HTML version/, last_response.body)
+  end
+
+  def test_multipart_alternative_text_as_default
+    get '/multipart_alternative_text_default'
     assert last_response.ok?
 
     assert_match(/This is plain text/, last_response.body)
