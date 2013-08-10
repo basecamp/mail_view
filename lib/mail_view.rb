@@ -31,19 +31,31 @@ class MailView
 
       ok index_template.render(Object.new, :links => links)
 
-    elsif request.path_info =~ /\A(.+?)([\w_]+)(\.\w+)?\z/
-      path   = $1
-      name   = $2
-      format = $3
+    elsif request.path =~ /([\w_]+)(\.\w+)?\z/
+      name, ext = $1, $2
+      format = Rack::Mime.mime_type(ext, nil)
+      missing_format = ext && format.nil?
 
-      if actions.include?(name)
+      if actions.include?(name) && !missing_format
         mail = build_mail(name)
-        response = if request.params["body"]
-                     render_mail_body(mail, format)
-                   else
-                     render_mail(name, mail, path, format)
-                   end
-        ok response
+
+        # Requested a specific bare MIME part. Render it verbatim.
+        if sub_type = request.params['part']
+          if part = find_part(mail, sub_type)
+            body = part.body
+            body = body.decoded if body.respond_to?(:decoded)
+            ok body, part.content_type
+          else
+            not_found
+          end
+
+        # Otherwise, show our message headers & frame the body.
+        else
+          part = find_part(mail, format || 'text/*') || mail
+          part_type = [part.main_type, part.sub_type].compact.join('/')
+          part_url = "#{request.path}?part=#{Rack::Utils.escape part_type}"
+          ok email_template.render(Object.new, :name => name, :mail => mail, :part => part, :part_url => part_url)
+        end
       else
         not_found
       end
@@ -75,8 +87,8 @@ class MailView
     end
 
   private
-    def ok(body)
-      [200, {"Content-Type" => "text/html"}, [body]]
+    def ok(body, content_type = 'text/html')
+      [200, {"Content-Type" => content_type}, [body]]
     end
 
     def not_found(pass = false)
@@ -93,33 +105,15 @@ class MailView
       mail
     end
 
-    def render_mail(name, mail, path, format)
-      part = body_part(mail, format)
-      body_path = "#{path}#{name}.#{part.sub_type}?body=1"
-      email_template.render(Object.new,
-                            :name => name,
-                            :mail => mail,
-                            :body_part => part,
-                            :body_only_path => body_path)
-    end
-
-    def render_mail_body(mail, format)
-      body_part(mail, format).body
-    end
-
-    def body_part(mail, format)
-      part = mail
-
+    def find_part(mail, matching_content_type)
       if mail.multipart?
-        parts = mail.respond_to?(:all_parts) ? mail.all_parts : mail.parts
-        if format && content_type = Rack::Mime.mime_type(format)
-          part = parts.find { |part| part.content_type.match(content_type) }
-        else
-          part = parts.last
-        end
+        all_parts(mail).reverse.find { |part| find_part part, matching_content_type }
+      elsif mail.content_type.to_s.match matching_content_type
+        mail
       end
-
-      part
     end
 
+    def all_parts(mail)
+      mail.respond_to?(:all_parts) ? mail.all_parts : mail.parts
+    end
 end

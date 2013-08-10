@@ -74,6 +74,19 @@ class TestMailView < Test::Unit::TestCase
       end
     end
 
+    def multipart_mixed_with_text_and_attachment
+      add_attachment_to plain_text_message
+    end
+
+    def multipart_mixed_with_multipart_alternative_and_attachment
+      add_attachment_to multipart_alternative
+    end
+
+    def add_attachment_to(mail)
+      mail.attachments['checkbox.png'] = 'stub'
+      mail
+    end
+
     def tmail_multipart_alternative
       TMail::Mail.parse(multipart_alternative.to_s)
     end
@@ -125,154 +138,208 @@ class TestMailView < Test::Unit::TestCase
 
   def test_index
     get '/'
-    assert last_response.ok?
-
-    assert_match(/plain_text_message/, last_response.body)
-    assert_match(/html_message/, last_response.body)
-    assert_match(/multipart_alternative/, last_response.body)
+    assert_match '/plain_text_message', last_response.body
+    assert_match '/html_message', last_response.body
+    assert_match '/multipart_alternative', last_response.body
   end
 
-  def test_not_found
+  def test_mounted_index
+    get '/', {}, 'SCRIPT_NAME' => '/boom'
+    assert_match '/boom/plain_text_message', last_response.body
+    assert_match '/boom/html_message', last_response.body
+    assert_match '/boom/multipart_alternative', last_response.body
+  end
+
+  def test_mailer_not_found
     get '/missing'
+    assert last_response.not_found?
+  end
+
+  def test_format_not_found
+    get '/plain_text_message.huzzah'
+    assert last_response.not_found?
+  end
+
+  def test_mime_part_not_found
+    get '/plain_text_message?part=text%2Fhtml'
     assert last_response.not_found?
   end
 
   def test_plain_text_message
     get '/plain_text_message'
     assert last_response.ok?
-    assert_match(/Hello/, last_response.body)
+    body_path = '/plain_text_message?part='
+    assert_match iframe_src_match(body_path), last_response.body
+
+    get body_path
+    assert last_response.ok?
+    assert_match 'Hello', last_response.body
   end
 
-  def test_plain_text_message_with_to_display_name
-    get '/plain_text_message_with_display_names'
+  def test_mounted_plain_text_message
+    get '/plain_text_message', {}, 'SCRIPT_NAME' => '/boom'
     assert last_response.ok?
+    body_path = '/boom/plain_text_message?part='
+    assert_match iframe_src_match(body_path), last_response.body
 
-    assert_match(/Josh Peek <josh@37signals.com>/, unescaped_body)
+    get body_path
+    assert last_response.ok?
+    assert_equal 'Hello', last_response.body
   end
 
-  def test_plain_text_message_with_from_display_name
+  def test_message_header_uses_full_display_names
     get '/plain_text_message_with_display_names'
-    assert last_response.ok?
-
-    assert_match(/Test Peek <test@foo.com>/, unescaped_body)
-  end
-
-  def test_plain_text_message_with_reply_to_display_name
-    get '/plain_text_message_with_display_names'
-    assert last_response.ok?
-
-    assert_match(/Another Peek <another@foo.com>/, unescaped_body)
+    assert_match 'Josh Peek <josh@37signals.com>', unescaped_body
+    assert_match 'Test Peek <test@foo.com>', unescaped_body
+    assert_match 'Another Peek <another@foo.com>', unescaped_body
   end
 
   def test_html_message
     get '/html_message'
     assert last_response.ok?
-    assert_match(iframe_src_match('/html_message.html?body=1'), last_response.body)
+    body_path = '/html_message?part=text%2Fhtml'
+    assert_match iframe_src_match(body_path), last_response.body
 
-    get '/html_message.html?body=1'
+    get body_path
     assert last_response.ok?
-    assert_match(/<h1>Hello<\/h1>/, last_response.body)
+    assert_equal '<h1>Hello</h1>', last_response.body
   end
 
   def test_nested_multipart_message
     get '/nested_multipart_message'
     assert last_response.ok?
-    assert_match(iframe_src_match('/nested_multipart_message.html?body=1'), last_response.body)
+    body_path = '/nested_multipart_message?part=text%2Fhtml'
+    assert_match iframe_src_match(body_path), last_response.body
 
-    get '/nested_multipart_message?body=1'
+    get body_path
     assert last_response.ok?
-    assert_match(/<h1>Hello<\/h1>/, last_response.body)
+    assert_equal '<h1>Hello</h1>', last_response.body
   end
 
   def test_multipart_alternative
     get '/multipart_alternative'
     assert last_response.ok?
-    assert_match(iframe_src_match('/multipart_alternative.html?body=1'), last_response.body)
-    assert_match(/View plain text version/, last_response.body)
+    body_path = '/multipart_alternative?part=text%2Fhtml'
+    assert_match iframe_src_match(body_path), last_response.body
+    assert_match 'View plain text version', last_response.body
 
-    get '/multipart_alternative.html?body=1'
+    get body_path
     assert last_response.ok?
-    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+    assert_equal '<h1>This is HTML</h1>', last_response.body
   end
 
   def test_multipart_alternative_as_html
     get '/multipart_alternative.html'
     assert last_response.ok?
-    assert_match(iframe_src_match('/multipart_alternative.html?body=1'), last_response.body)
-    assert_match(/View plain text version/, last_response.body)
+    body_path = '/multipart_alternative.html?part=text%2Fhtml'
+    assert_match iframe_src_match(body_path), last_response.body
+    assert_match 'View plain text version', last_response.body
 
-    get '/multipart_alternative.html?body=1'
+    get body_path
     assert last_response.ok?
-    assert_match(/<h1>This is HTML<\/h1>/, last_response.body)
+    assert_equal '<h1>This is HTML</h1>', last_response.body
   end
 
   def test_multipart_alternative_as_text
     get '/multipart_alternative.txt'
     assert last_response.ok?
+    body_path = '/multipart_alternative.txt?part=text%2Fplain'
+    assert_match iframe_src_match(body_path), last_response.body
+    assert_match 'View HTML version', last_response.body
 
-    assert_match(/This is plain text/, last_response.body)
-    assert_match(/View HTML version/, last_response.body)
+    get body_path
+    assert last_response.ok?
+    assert_equal 'This is plain text', last_response.body
   end
 
   def test_multipart_alternative_text_as_default
     get '/multipart_alternative_text_default'
     assert last_response.ok?
+    body_path = '/multipart_alternative_text_default?part=text%2Fplain'
+    assert_match iframe_src_match(body_path), last_response.body
+    assert_match 'View HTML version', last_response.body
 
-    assert_match(/This is plain text/, last_response.body)
-    assert_match(/View HTML version/, last_response.body)
+    get body_path
+    assert last_response.ok?
+    assert_equal 'This is plain text', last_response.body
+  end
+
+  def test_multipart_mixed_with_text_and_attachment
+    get '/multipart_mixed_with_text_and_attachment'
+    assert last_response.ok?
+    body_path = '/multipart_mixed_with_text_and_attachment?part='
+    assert_match iframe_src_match(body_path), last_response.body
+    assert_no_match %r(View HTML version), last_response.body
+    assert_no_match %r(View plain text version), last_response.body
+    assert_match 'checkbox.png', last_response.body
+
+    get body_path
+    assert last_response.ok?
+    assert_equal 'Hello', last_response.body
+  end
+
+  def test_multipart_mixed_with_multipart_alternative_and_attachment
+    get '/multipart_mixed_with_multipart_alternative_and_attachment'
+    assert last_response.ok?
+    body_path = '/multipart_mixed_with_multipart_alternative_and_attachment?part=text%2Fhtml'
+    assert_match iframe_src_match(body_path), last_response.body
+    assert_match 'View plain text version', last_response.body
+    assert_match 'checkbox.png', last_response.body
+
+    get body_path
+    assert last_response.ok?
+    assert_equal '<h1>This is HTML</h1>', last_response.body
+  end
+
+  def test_multipart_mixed_with_multipart_alternative_and_attachment_preferring_plain_text
+    get '/multipart_mixed_with_multipart_alternative_and_attachment.txt'
+    assert last_response.ok?
+    body_path = '/multipart_mixed_with_multipart_alternative_and_attachment.txt?part=text%2Fplain'
+    assert_match iframe_src_match(body_path), last_response.body
+    assert_match 'View HTML version', last_response.body
+    assert_match 'checkbox.png', last_response.body
+
+    get body_path
+    assert last_response.ok?
+    assert_equal 'This is plain text', last_response.body
   end
 
   def test_interceptors
     ISayHelloAndYouSayGoodbyeInterceptor.intercept do
-      get '/plain_text_message'
+      get '/plain_text_message?part='
     end
-
-    assert last_response.ok?
-    assert_match(/Goodbye/, last_response.body)
+    assert_equal 'Goodbye', last_response.body
   end
 
   unless RUBY_VERSION >= '1.9'
     def test_tmail_html_message
       get '/tmail_html_message'
       assert last_response.ok?
-      assert_match(iframe_src_match('/tmail_html_message.html?body=1'), last_response.body)
+      body_path = '/tmail_html_message?part=text%2Fhtml'
+      assert_match iframe_src_match(body_path), last_response.body
 
-      get '/tmail_html_message.html?body=1'
+      get body_path
       assert last_response.ok?
-      assert_match(/<h1>Hello<\/h1>/, last_response.body)
+      assert_equal '<h1>Hello</h1>', last_response.body
     end
 
     def test_tmail_multipart_alternative
       get '/tmail_multipart_alternative'
       assert last_response.ok?
-      assert_match(/View plain text version/, last_response.body)
-      assert_match(iframe_src_match('/tmail_multipart_alternative.html?body=1'), last_response.body)
+      body_path = '/tmail_multipart_alternative?part=text%2Fhtml'
+      assert_match iframe_src_match(body_path), last_response.body
+      assert_match 'View plain text version', last_response.body
 
-      get '/tmail_multipart_alternative.html?body=1'
+      get body_path
       assert last_response.ok?
-      assert_match(/<h1>Hello<\/h1>/, last_response.body)
+      assert_equal "<h1>This is HTML</h1>\r\n", last_response.body
     end
 
-    def test_tmail_plain_text_message_with_to_display_name
+    def test_tmail_message_header_uses_full_display_names
       get '/tmail_plain_text_message_with_display_names'
-      assert last_response.ok?
-
-      assert_match(/Josh Peek <josh@37signals.com>/, unescaped_body)
+      assert_match 'Josh Peek <josh@37signals.com>', unescaped_body
+      assert_match 'Test Peek <test@foo.com>', unescaped_body
+      assert_match 'Another Peek <another@foo.com>', unescaped_body
     end
-
-    def test_tmail_plain_text_message_with_from_display_name
-      get '/tmail_plain_text_message_with_display_names'
-      assert last_response.ok?
-
-      assert_match(/Test Peek <test@foo.com>/, unescaped_body)
-    end
-
-    def test_tmail_plain_text_message_with_reply_to_display_name
-      get '/tmail_plain_text_message_with_display_names'
-      assert last_response.ok?
-
-      assert_match(/Another Peek <another@foo.com>/, unescaped_body)
-    end
-
   end
 end

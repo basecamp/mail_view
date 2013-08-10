@@ -1,33 +1,26 @@
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=<%= body_part.charset %>" />
-  <meta name="viewport" content="width=device-width" />
-</head>
+<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width" />
 <style type="text/css">
-  * { margin: 0; padding: 0; }
-
-  body {
-    display: -webkit-flex;
-    display: flex;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-    padding: 20px;
-  }
-
-  #message_headers {
+  header {
+    width: 100%;
+    padding: 10px 0 0 0;
+    margin: 0;
     background: white;
     font: 12px/16px "Lucida Grande", sans-serif;
-  }
-
-  #message_headers dl {
-    display: block;
     border-bottom: 1px solid #dedede;
-    padding-bottom: 20px;
-    margin-bottom: 20px;
     overflow: hidden;
   }
 
-  #message_headers dt {
-    width: 60px;
+  dl {
+    float: left;
+    margin: 0 0 10px 0;
+    padding: 0;
+  }
+
+  dt {
+    width: 80px;
+    padding: 1px;
     float: left;
     clear: left;
     text-align: right;
@@ -35,33 +28,30 @@
     color: #7f7f7f;
   }
 
-  #message_headers dd {
-    margin-left: 70px; /* 60px + 10px */
+  dd {
+    margin-left: 90px; /* 80px + 10px */
+    padding: 1px;
   }
 
-  #message_headers p.alternate {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+  nav {
+    float: right;
+    margin: 0;
   }
 
-  #message_headers p.alternate a {
+  nav a {
     color: #09c;
   }
 
-  iframe#message_body {
+  iframe {
     border: 0;
     width: 100%;
-    -webkit-flex: 1 1 auto;
-    flex: 1 1 auto;
-  }
-
-  pre#message_body {
-    white-space: pre-wrap;
+    height: 800px;
   }
 </style>
+</head>
 
-<div id="message_headers">
+<body>
+<header>
   <dl>
     <% if mail.respond_to?(:smtp_envelope_from) && mail.from != mail.smtp_envelope_from %>
       <dt>SMTP-From:</dt>
@@ -92,18 +82,25 @@
   </dl>
 
   <% if mail.multipart? %>
-    <p class="alternate">
-      <% if body_part.content_type && body_part.content_type.match(/text\/html/) %>
+    <nav>
+      <% if part.content_type && part.content_type.match(/text\/html/) %>
         <a href="<%= name %>.txt">View plain text version</a>
       <% else %>
         <a href="<%= name %>.html">View HTML version</a>
       <% end %>
-    </p>
+    </nav>
   <% end %>
-</div>
 
-<% if body_part.content_type && body_part.content_type.match(/text\/html/) %>
-<iframe id="message_body" src="<%= body_only_path %>"></iframe>
-<% else %>
-<pre id="message_body"><%= body_part.body %></pre>
-<% end %>
+  <% unless mail.attachments.nil? || mail.attachments.empty? %>
+    <ul>
+      <% mail.attachments.each do |attachment| %>
+        <%= Rack::Utils.escape_html(attachment.respond_to?(:original_filename) ? attachment.original_filename : attachment.filename) %>
+      <% end %>
+    </ul>
+  <% end %>
+</header>
+
+<iframe seamless src="<%= part_url %>"></iframe>
+
+</body>
+</html>
