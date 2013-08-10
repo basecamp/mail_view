@@ -40,8 +40,8 @@ class MailView
         mail = build_mail(name)
 
         # Requested a specific bare MIME part. Render it verbatim.
-        if sub_type = request.params['part']
-          if part = find_part(mail, sub_type)
+        if part_type = request.params['part']
+          if part = find_part(mail, part_type)
             body = part.body
             body = body.decoded if body.respond_to?(:decoded)
             ok body, part.content_type
@@ -51,10 +51,8 @@ class MailView
 
         # Otherwise, show our message headers & frame the body.
         else
-          part = find_part(mail, format || 'text/*') || mail
-          part_type = [part.main_type, part.sub_type].compact.join('/')
-          part_url = "#{request.path}?part=#{Rack::Utils.escape part_type}"
-          ok email_template.render(Object.new, :name => name, :mail => mail, :part => part, :part_url => part_url)
+          part = find_preferred_part(mail, [format, 'text/html', 'text/plain'])
+          ok email_template.render(Object.new, :name => name, :mail => mail, :part => part, :part_url => part_body_url(part))
         end
       else
         not_found
@@ -105,15 +103,27 @@ class MailView
       mail
     end
 
-    def find_part(mail, matching_content_type)
-      if mail.multipart?
-        all_parts(mail).reverse.find { |part| find_part part, matching_content_type }
-      elsif mail.content_type.to_s.match matching_content_type
-        mail
-      end
+    def find_preferred_part(mail, formats)
+      found = nil
+      formats.find { |f| found = find_part(mail, f) }
+      found || mail
     end
 
-    def all_parts(mail)
-      mail.respond_to?(:all_parts) ? mail.all_parts : mail.parts
+    def part_body_url(part)
+      '?part=%s' % Rack::Utils.escape([part.main_type, part.sub_type].compact.join('/'))
+    end
+
+    def find_part(mail, matching_content_type)
+      if mail.multipart?
+        if matching_content_type.nil? && mail.sub_type == 'alternative'
+          mail.parts.last
+        else
+          found = nil
+          mail.parts.find { |part| found = find_part(part, matching_content_type) }
+          found
+        end
+      elsif matching_content_type && mail.content_type.to_s.match(matching_content_type)
+        mail
+      end
     end
 end

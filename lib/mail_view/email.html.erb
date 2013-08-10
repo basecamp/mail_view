@@ -7,13 +7,12 @@
     padding: 10px 0 0 0;
     margin: 0;
     background: white;
-    font: 12px/16px "Lucida Grande", sans-serif;
+    font: 12px "Lucida Grande", sans-serif;
     border-bottom: 1px solid #dedede;
     overflow: hidden;
   }
 
   dl {
-    float: left;
     margin: 0 0 10px 0;
     padding: 0;
   }
@@ -24,22 +23,12 @@
     float: left;
     clear: left;
     text-align: right;
-    font-weight: bold;
     color: #7f7f7f;
   }
 
   dd {
     margin-left: 90px; /* 80px + 10px */
     padding: 1px;
-  }
-
-  nav {
-    float: right;
-    margin: 0;
-  }
-
-  nav a {
-    color: #09c;
   }
 
   iframe {
@@ -53,9 +42,14 @@
 <body>
 <header>
   <dl>
-    <% if mail.respond_to?(:smtp_envelope_from) && mail.from != mail.smtp_envelope_from %>
+    <% if mail.respond_to?(:smtp_envelope_from) && Array(mail.from) != Array(mail.smtp_envelope_from) %>
       <dt>SMTP-From:</dt>
       <dd><%= mail.smtp_envelope_from %></dd>
+    <% end %>
+
+    <% if mail.respond_to?(:smtp_envelope_to) && mail.to != mail.smtp_envelope_to %>
+      <dt>SMTP-To:</dt>
+      <dd><%= mail.smtp_envelope_to %></dd>
     <% end %>
 
     <dt>From:</dt>
@@ -66,41 +60,39 @@
       <dd><%= Rack::Utils.escape_html(mail.header['reply-to'].to_s) %></dd>
     <% end %>
 
-    <dt>Subject:</dt>
-    <dd><strong><%= mail.subject %></strong></dd>
+    <dt>To:</dt>
+    <dd><%= Rack::Utils.escape_html(mail.header['to'].to_s) %></dd>
+
+    <% if mail.cc %>
+      <dt>CC:</dt>
+      <dd><%= Rack::Utils.escape_html(mail.header['cc'].to_s) %></dd>
+    <% end %>
 
     <dt>Date:</dt>
     <dd><%= Time.now.strftime("%b %e, %Y %I:%M:%S %p %Z") %></dd>
 
-    <% if mail.respond_to?(:smtp_envelope_to) && mail.to != mail.smtp_envelope_to %>
-      <dt>SMTP-To:</dt>
-      <dd><%= mail.smtp_envelope_to %></dd>
+    <dt>Subject:</dt>
+    <dd><strong><%= mail.subject %></strong></dd>
+
+    <% unless mail.attachments.nil? || mail.attachments.empty? %>
+      <dt>Attachments:</dt>
+      <dd>
+        <%= Rack::Utils.escape_html mail.attachments.map { |a| a.respond_to?(:original_filename) ? a.original_filename : a.filename }.inspect %>
+      </dd>
     <% end %>
 
-    <dt>To:</dt>
-    <dd><%= Rack::Utils.escape_html(mail.header['to'].to_s) %></dd>
+    <% if mail.multipart? %>
+      <dd>
+        <select onchange="top.messageBody.location=this.options[this.selectedIndex].value;">
+          <option value="?part=text%2Fhtml">View as HTML email</option>
+          <option value="?part=text%2Fplain">View as plain-text email</option>
+        </select>
+      </dd>
+    <% end %>
   </dl>
-
-  <% if mail.multipart? %>
-    <nav>
-      <% if part.content_type && part.content_type.match(/text\/html/) %>
-        <a href="<%= name %>.txt">View plain text version</a>
-      <% else %>
-        <a href="<%= name %>.html">View HTML version</a>
-      <% end %>
-    </nav>
-  <% end %>
-
-  <% unless mail.attachments.nil? || mail.attachments.empty? %>
-    <ul>
-      <% mail.attachments.each do |attachment| %>
-        <%= Rack::Utils.escape_html(attachment.respond_to?(:original_filename) ? attachment.original_filename : attachment.filename) %>
-      <% end %>
-    </ul>
-  <% end %>
 </header>
 
-<iframe seamless src="<%= part_url %>"></iframe>
+<iframe seamless name="messageBody" src="<%= part_url %>"></iframe>
 
 </body>
 </html>

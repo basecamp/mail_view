@@ -14,6 +14,7 @@ class TestMailView < Test::Unit::TestCase
       Mail.new do
         to 'josh@37signals.com'
         body 'Hello'
+        yield self if block_given?
       end
     end
 
@@ -47,6 +48,8 @@ class TestMailView < Test::Unit::TestCase
       Mail.new do
         to 'josh@37signals.com'
 
+        yield self if block_given?
+
         text_part do
           body 'This is plain text'
         end
@@ -70,20 +73,20 @@ class TestMailView < Test::Unit::TestCase
         text_part do
           body 'This is plain text'
         end
-
       end
     end
 
     def multipart_mixed_with_text_and_attachment
-      add_attachment_to plain_text_message
+      plain_text_message { |mail| add_attachments_to mail }
     end
 
     def multipart_mixed_with_multipart_alternative_and_attachment
-      add_attachment_to multipart_alternative
+      multipart_alternative { |mail| add_attachments_to mail }
     end
 
-    def add_attachment_to(mail)
-      mail.attachments['checkbox.png'] = 'stub'
+    def add_attachments_to(mail)
+      mail.add_file :filename => 'checkbox.png', :content => 'stub'
+      mail.add_file :filename => 'foo.vcf', :content => 'stub'
       mail
     end
 
@@ -128,8 +131,8 @@ class TestMailView < Test::Unit::TestCase
     Preview
   end
 
-  def iframe_src_match(action)
-    /<iframe[^>]* src="#{Regexp.escape(action)}"[^>]*><\/iframe>/
+  def iframe_src_match(content_type)
+    /<iframe[^>]* src="\?part=#{Regexp.escape(Rack::Utils.escape(content_type))}"[^>]*><\/iframe>/
   end
 
   def unescaped_body
@@ -168,10 +171,10 @@ class TestMailView < Test::Unit::TestCase
   def test_plain_text_message
     get '/plain_text_message'
     assert last_response.ok?
-    body_path = '/plain_text_message?part='
-    assert_match iframe_src_match(body_path), last_response.body
+    assert_match iframe_src_match(''), last_response.body
+    assert_no_match %r(View as), last_response.body
 
-    get body_path
+    get '/plain_text_message?part='
     assert last_response.ok?
     assert_match 'Hello', last_response.body
   end
@@ -179,10 +182,10 @@ class TestMailView < Test::Unit::TestCase
   def test_mounted_plain_text_message
     get '/plain_text_message', {}, 'SCRIPT_NAME' => '/boom'
     assert last_response.ok?
-    body_path = '/boom/plain_text_message?part='
-    assert_match iframe_src_match(body_path), last_response.body
+    assert_match iframe_src_match(''), last_response.body
+    assert_no_match %r(View as), last_response.body
 
-    get body_path
+    get '/boom/plain_text_message?part='
     assert last_response.ok?
     assert_equal 'Hello', last_response.body
   end
@@ -197,10 +200,10 @@ class TestMailView < Test::Unit::TestCase
   def test_html_message
     get '/html_message'
     assert last_response.ok?
-    body_path = '/html_message?part=text%2Fhtml'
-    assert_match iframe_src_match(body_path), last_response.body
+    assert_match iframe_src_match('text/html'), last_response.body
+    assert_no_match %r(View as), last_response.body
 
-    get body_path
+    get '/html_message?part=text%2Fhtml'
     assert last_response.ok?
     assert_equal '<h1>Hello</h1>', last_response.body
   end
@@ -208,10 +211,10 @@ class TestMailView < Test::Unit::TestCase
   def test_nested_multipart_message
     get '/nested_multipart_message'
     assert last_response.ok?
-    body_path = '/nested_multipart_message?part=text%2Fhtml'
-    assert_match iframe_src_match(body_path), last_response.body
+    assert_match iframe_src_match('text/html'), last_response.body
+    assert_match %r(View as), last_response.body
 
-    get body_path
+    get '/nested_multipart_message?part=text%2Fhtml'
     assert last_response.ok?
     assert_equal '<h1>Hello</h1>', last_response.body
   end
@@ -219,11 +222,10 @@ class TestMailView < Test::Unit::TestCase
   def test_multipart_alternative
     get '/multipart_alternative'
     assert last_response.ok?
-    body_path = '/multipart_alternative?part=text%2Fhtml'
-    assert_match iframe_src_match(body_path), last_response.body
-    assert_match 'View plain text version', last_response.body
+    assert_match iframe_src_match('text/html'), last_response.body
+    assert_match 'View as', last_response.body
 
-    get body_path
+    get '/multipart_alternative?part=text%2Fhtml'
     assert last_response.ok?
     assert_equal '<h1>This is HTML</h1>', last_response.body
   end
@@ -231,11 +233,10 @@ class TestMailView < Test::Unit::TestCase
   def test_multipart_alternative_as_html
     get '/multipart_alternative.html'
     assert last_response.ok?
-    body_path = '/multipart_alternative.html?part=text%2Fhtml'
-    assert_match iframe_src_match(body_path), last_response.body
-    assert_match 'View plain text version', last_response.body
+    assert_match iframe_src_match('text/html'), last_response.body
+    assert_match 'View as', last_response.body
 
-    get body_path
+    get '/multipart_alternative.html?part=text%2Fhtml'
     assert last_response.ok?
     assert_equal '<h1>This is HTML</h1>', last_response.body
   end
@@ -243,11 +244,10 @@ class TestMailView < Test::Unit::TestCase
   def test_multipart_alternative_as_text
     get '/multipart_alternative.txt'
     assert last_response.ok?
-    body_path = '/multipart_alternative.txt?part=text%2Fplain'
-    assert_match iframe_src_match(body_path), last_response.body
-    assert_match 'View HTML version', last_response.body
+    assert_match iframe_src_match('text/plain'), last_response.body
+    assert_match 'View as', last_response.body
 
-    get body_path
+    get '/multipart_alternative.txt?part=text%2Fplain'
     assert last_response.ok?
     assert_equal 'This is plain text', last_response.body
   end
@@ -255,11 +255,10 @@ class TestMailView < Test::Unit::TestCase
   def test_multipart_alternative_text_as_default
     get '/multipart_alternative_text_default'
     assert last_response.ok?
-    body_path = '/multipart_alternative_text_default?part=text%2Fplain'
-    assert_match iframe_src_match(body_path), last_response.body
-    assert_match 'View HTML version', last_response.body
+    assert_match iframe_src_match('text/plain'), last_response.body
+    assert_match 'View as', last_response.body
 
-    get body_path
+    get '/multipart_alternative_text_default?part=text%2Fplain'
     assert last_response.ok?
     assert_equal 'This is plain text', last_response.body
   end
@@ -267,13 +266,11 @@ class TestMailView < Test::Unit::TestCase
   def test_multipart_mixed_with_text_and_attachment
     get '/multipart_mixed_with_text_and_attachment'
     assert last_response.ok?
-    body_path = '/multipart_mixed_with_text_and_attachment?part='
-    assert_match iframe_src_match(body_path), last_response.body
-    assert_no_match %r(View HTML version), last_response.body
-    assert_no_match %r(View plain text version), last_response.body
+    assert_match iframe_src_match('text/plain'), last_response.body
+    #assert_no_match %r(View as), last_response.body
     assert_match 'checkbox.png', last_response.body
 
-    get body_path
+    get '/multipart_mixed_with_text_and_attachment?part=text%2Fplain'
     assert last_response.ok?
     assert_equal 'Hello', last_response.body
   end
@@ -281,12 +278,11 @@ class TestMailView < Test::Unit::TestCase
   def test_multipart_mixed_with_multipart_alternative_and_attachment
     get '/multipart_mixed_with_multipart_alternative_and_attachment'
     assert last_response.ok?
-    body_path = '/multipart_mixed_with_multipart_alternative_and_attachment?part=text%2Fhtml'
-    assert_match iframe_src_match(body_path), last_response.body
-    assert_match 'View plain text version', last_response.body
+    assert_match iframe_src_match('text/html'), last_response.body
+    assert_match 'View as', last_response.body
     assert_match 'checkbox.png', last_response.body
 
-    get body_path
+    get '/multipart_mixed_with_multipart_alternative_and_attachment?part=text%2Fhtml'
     assert last_response.ok?
     assert_equal '<h1>This is HTML</h1>', last_response.body
   end
@@ -294,12 +290,11 @@ class TestMailView < Test::Unit::TestCase
   def test_multipart_mixed_with_multipart_alternative_and_attachment_preferring_plain_text
     get '/multipart_mixed_with_multipart_alternative_and_attachment.txt'
     assert last_response.ok?
-    body_path = '/multipart_mixed_with_multipart_alternative_and_attachment.txt?part=text%2Fplain'
-    assert_match iframe_src_match(body_path), last_response.body
-    assert_match 'View HTML version', last_response.body
+    assert_match iframe_src_match('text/plain'), last_response.body
+    assert_match 'View as', last_response.body
     assert_match 'checkbox.png', last_response.body
 
-    get body_path
+    get '/multipart_mixed_with_multipart_alternative_and_attachment.txt?part=text%2Fplain'
     assert last_response.ok?
     assert_equal 'This is plain text', last_response.body
   end
@@ -315,10 +310,9 @@ class TestMailView < Test::Unit::TestCase
     def test_tmail_html_message
       get '/tmail_html_message'
       assert last_response.ok?
-      body_path = '/tmail_html_message?part=text%2Fhtml'
-      assert_match iframe_src_match(body_path), last_response.body
+      assert_match iframe_src_match('text/html'), last_response.body
 
-      get body_path
+      get '/tmail_html_message?part=text%2Fhtml'
       assert last_response.ok?
       assert_equal '<h1>Hello</h1>', last_response.body
     end
@@ -327,8 +321,8 @@ class TestMailView < Test::Unit::TestCase
       get '/tmail_multipart_alternative'
       assert last_response.ok?
       body_path = '/tmail_multipart_alternative?part=text%2Fhtml'
-      assert_match iframe_src_match(body_path), last_response.body
-      assert_match 'View plain text version', last_response.body
+      assert_match iframe_src_match('text/html'), last_response.body
+      assert_match 'View as', last_response.body
 
       get body_path
       assert last_response.ok?
