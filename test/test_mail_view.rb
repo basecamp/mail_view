@@ -93,6 +93,24 @@ class TestMailView < Test::Unit::TestCase
     end
   end
 
+  class ISayHelloAndYouSayGoodbyeInterceptor
+    Mail.register_interceptor self
+    @@intercept = false
+
+    def self.intercept
+      @@intercept = true
+      yield
+    ensure
+      @@intercept = false
+    end
+
+    def self.delivering_email(message)
+      if @@intercept
+        message.body = message.body.to_s.gsub('Hello', 'Goodbye')
+      end
+    end
+  end
+
   def app
     Preview
   end
@@ -202,6 +220,15 @@ class TestMailView < Test::Unit::TestCase
 
     assert_match(/This is plain text/, last_response.body)
     assert_match(/View HTML version/, last_response.body)
+  end
+
+  def test_interceptors
+    ISayHelloAndYouSayGoodbyeInterceptor.intercept do
+      get '/plain_text_message'
+    end
+
+    assert last_response.ok?
+    assert_match(/Goodbye/, last_response.body)
   end
 
   unless RUBY_VERSION >= '1.9'

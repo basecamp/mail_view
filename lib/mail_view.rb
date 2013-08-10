@@ -37,7 +37,7 @@ class MailView
       format = $3
 
       if actions.include?(name)
-        mail = send(name)
+        mail = build_mail(name)
         response = if request.params["body"]
                      render_mail_body(mail, format)
                    else
@@ -85,6 +85,12 @@ class MailView
       else
         [404, {"Content-Type" => "text/html"}, ["Not Found"]]
       end
+    end
+
+    def build_mail(name)
+      mail = send(name)
+      Mail.inform_interceptors(mail) if defined? Mail
+      mail
     end
 
     def render_mail(name, mail, path, format)
