@@ -84,15 +84,15 @@
     <% if mail.multipart? %>
       <dd>
         <select onchange="top.messageBody.location=this.options[this.selectedIndex].value;">
-          <option value="?part=text%2Fhtml">View as HTML email</option>
-          <option value="?part=text%2Fplain">View as plain-text email</option>
+          <option value="?part=text%2Fhtml<%=params%>">View as HTML email</option>
+          <option value="?part=text%2Fplain<%=params%>">View as plain-text email</option>
         </select>
       </dd>
     <% end %>
   </dl>
 </header>
 
-<iframe seamless name="messageBody" src="<%= part_url %>"></iframe>
+<iframe seamless name="messageBody" src="<%= part_url + params %>"></iframe>
 
 </body>
 </html>

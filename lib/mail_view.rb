@@ -55,8 +55,12 @@ class MailView
         # Otherwise, show our message headers & frame the body.
         else
           part = find_preferred_part(mail, [format, 'text/html', 'text/plain'])
-          part_url = part_body_url(part) + format_params(params)
-          ok email_template.render(Object.new, :name => name, :mail => mail, :part => part, :part_url => part_url)
+          ok email_template.render(Object.new,
+                                   :name    => name,
+                                   :mail    => mail,
+                                   :part    => part,
+                                   :part_url=> part_body_url(part),
+                                   :params  => format_params(params))
         end
       else
         not_found
