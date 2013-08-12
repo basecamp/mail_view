@@ -131,8 +131,8 @@ class TestMailView < Test::Unit::TestCase
     Preview
   end
 
-  def iframe_src_match(content_type)
-    /<iframe[^>]* src="\?part=#{Regexp.escape(Rack::Utils.escape(content_type))}"[^>]*><\/iframe>/
+  def iframe_src_match(content_type, params="")
+    /<iframe[^>]* src="\?part=#{Regexp.escape(Rack::Utils.escape(content_type))}#{params}"[^>]*><\/iframe>/
   end
 
   def unescaped_body
@@ -206,6 +206,12 @@ class TestMailView < Test::Unit::TestCase
     get '/html_message?part=text%2Fhtml'
     assert last_response.ok?
     assert_equal '<h1>Hello</h1>', last_response.body
+  end
+
+  def test_html_message_with_params
+    get '/html_message?user_id=42'
+    assert last_response.ok?
+    assert_match iframe_src_match('text/html',"&user_id=42"), last_response.body
   end
 
   def test_nested_multipart_message

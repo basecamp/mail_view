@@ -7,6 +7,8 @@ require 'rack/request'
 class MailView
   autoload :Mapper, 'mail_view/mapper'
 
+  attr_accessor :params
+
   class << self
     def default_email_template_path
       File.expand_path('../mail_view/email.html.erb', __FILE__)
@@ -33,6 +35,7 @@ class MailView
 
     elsif request.path =~ /([\w_]+)(\.\w+)?\z/
       name, ext = $1, $2
+      self.params = request.params
       format = Rack::Mime.mime_type(ext, nil)
       missing_format = ext && format.nil?
 
@@ -52,7 +55,12 @@ class MailView
         # Otherwise, show our message headers & frame the body.
         else
           part = find_preferred_part(mail, [format, 'text/html', 'text/plain'])
-          ok email_template.render(Object.new, :name => name, :mail => mail, :part => part, :part_url => part_body_url(part))
+          ok email_template.render(Object.new,
+                                   :name    => name,
+                                   :mail    => mail,
+                                   :part    => part,
+                                   :part_url=> part_body_url(part),
+                                   :params  => format_params(params))
         end
       else
         not_found
@@ -111,6 +119,13 @@ class MailView
 
     def part_body_url(part)
       '?part=%s' % Rack::Utils.escape([part.main_type, part.sub_type].compact.join('/'))
+    end
+
+    def format_params(params)
+      params.inject("") {|m,o|
+        parm = "#{o[0]}=#{Rack::Utils.escape(o[1])}"
+        "#{m}&#{parm}"
+      }
     end
 
     def find_part(mail, matching_content_type)
