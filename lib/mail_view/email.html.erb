@@ -83,9 +83,10 @@
 
     <% if mail.multipart? %>
       <dd>
+        <dt>Email Part:</dt>
         <select onchange="top.messageBody.location=this.options[this.selectedIndex].value;">
-          <option value="?part=text%2Fhtml">View as HTML email</option>
-          <option value="?part=text%2Fplain">View as plain-text email</option>
+          <option value="?part=text%2Fhtml">HTML</option>
+          <option value="?part=text%2Fplain" selected>Plain-text</option>
         </select>
       </dd>
     <% end %>
