@@ -172,7 +172,7 @@ class TestMailView < Test::Unit::TestCase
     get '/plain_text_message'
     assert last_response.ok?
     assert_match iframe_src_match(''), last_response.body
-    assert_no_match %r(View as), last_response.body
+    assert_no_match %r(Email Part), last_response.body
 
     get '/plain_text_message?part='
     assert last_response.ok?
@@ -183,7 +183,7 @@ class TestMailView < Test::Unit::TestCase
     get '/plain_text_message', {}, 'SCRIPT_NAME' => '/boom'
     assert last_response.ok?
     assert_match iframe_src_match(''), last_response.body
-    assert_no_match %r(View as), last_response.body
+    assert_no_match %r(Email Part), last_response.body
 
     get '/boom/plain_text_message?part='
     assert last_response.ok?
@@ -201,7 +201,7 @@ class TestMailView < Test::Unit::TestCase
     get '/html_message'
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
-    assert_no_match %r(View as), last_response.body
+    assert_no_match %r(Email Part), last_response.body
 
     get '/html_message?part=text%2Fhtml'
     assert last_response.ok?
@@ -212,7 +212,7 @@ class TestMailView < Test::Unit::TestCase
     get '/nested_multipart_message'
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
-    assert_match %r(View as), last_response.body
+    assert_match %r(Email Part), last_response.body
 
     get '/nested_multipart_message?part=text%2Fhtml'
     assert last_response.ok?
@@ -223,7 +223,7 @@ class TestMailView < Test::Unit::TestCase
     get '/multipart_alternative'
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
-    assert_match 'View as', last_response.body
+    assert_match 'Email Part', last_response.body
 
     get '/multipart_alternative?part=text%2Fhtml'
     assert last_response.ok?
@@ -234,7 +234,7 @@ class TestMailView < Test::Unit::TestCase
     get '/multipart_alternative.html'
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
-    assert_match 'View as', last_response.body
+    assert_match 'Email Part', last_response.body
 
     get '/multipart_alternative.html?part=text%2Fhtml'
     assert last_response.ok?
@@ -245,7 +245,7 @@ class TestMailView < Test::Unit::TestCase
     get '/multipart_alternative.txt'
     assert last_response.ok?
     assert_match iframe_src_match('text/plain'), last_response.body
-    assert_match 'View as', last_response.body
+    assert_match 'Email Part', last_response.body
 
     get '/multipart_alternative.txt?part=text%2Fplain'
     assert last_response.ok?
@@ -256,7 +256,7 @@ class TestMailView < Test::Unit::TestCase
     get '/multipart_alternative_text_default'
     assert last_response.ok?
     assert_match iframe_src_match('text/plain'), last_response.body
-    assert_match 'View as', last_response.body
+    assert_match 'Email Part', last_response.body
 
     get '/multipart_alternative_text_default?part=text%2Fplain'
     assert last_response.ok?
@@ -267,7 +267,7 @@ class TestMailView < Test::Unit::TestCase
     get '/multipart_mixed_with_text_and_attachment'
     assert last_response.ok?
     assert_match iframe_src_match('text/plain'), last_response.body
-    #assert_no_match %r(View as), last_response.body
+    #assert_no_match %r(Email Part), last_response.body
     assert_match 'checkbox.png', last_response.body
 
     get '/multipart_mixed_with_text_and_attachment?part=text%2Fplain'
@@ -279,7 +279,7 @@ class TestMailView < Test::Unit::TestCase
     get '/multipart_mixed_with_multipart_alternative_and_attachment'
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
-    assert_match 'View as', last_response.body
+    assert_match 'Email Part', last_response.body
     assert_match 'checkbox.png', last_response.body
 
     get '/multipart_mixed_with_multipart_alternative_and_attachment?part=text%2Fhtml'
@@ -291,7 +291,7 @@ class TestMailView < Test::Unit::TestCase
     get '/multipart_mixed_with_multipart_alternative_and_attachment.txt'
     assert last_response.ok?
     assert_match iframe_src_match('text/plain'), last_response.body
-    assert_match 'View as', last_response.body
+    assert_match 'Email Part', last_response.body
     assert_match 'checkbox.png', last_response.body
 
     get '/multipart_mixed_with_multipart_alternative_and_attachment.txt?part=text%2Fplain'
@@ -322,7 +322,7 @@ class TestMailView < Test::Unit::TestCase
       assert last_response.ok?
       body_path = '/tmail_multipart_alternative?part=text%2Fhtml'
       assert_match iframe_src_match('text/html'), last_response.body
-      assert_match 'View as', last_response.body
+      assert_match 'Email Part', last_response.body
 
       get body_path
       assert last_response.ok?
