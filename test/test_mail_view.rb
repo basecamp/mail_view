@@ -27,6 +27,16 @@ class TestMailView < Test::Unit::TestCase
       end
     end
 
+    def plain_text_message_with_custom_headers
+      Mail.new do
+        to 'Josh Peek <josh@37signals.com>'
+        from 'Test Peek <test@foo.com>'
+        reply_to 'Another Peek <another@foo.com>'
+        header['X-Custom-Header'] = 'custom-header-value'
+        body 'Hello'
+      end
+    end
+
     def tmail_plain_text_message_with_display_names
       TMail::Mail.parse(plain_text_message_with_display_names.to_s)
     end
@@ -196,6 +206,16 @@ class TestMailView < Test::Unit::TestCase
     assert_match 'Test Peek <test@foo.com>', unescaped_body
     assert_match 'Another Peek <another@foo.com>', unescaped_body
   end
+  
+  def test_custom_headers
+    get '/plain_text_message_with_custom_headers'
+    assert_match 'Josh Peek <josh@37signals.com>', unescaped_body
+    assert_match 'Test Peek <test@foo.com>', unescaped_body
+    assert_match 'Another Peek <another@foo.com>', unescaped_body
+    assert_match 'X-Custom-Header', unescaped_body
+    assert_match 'custom-header-value', unescaped_body
+  end
+
 
   def test_html_message
     get '/html_message'

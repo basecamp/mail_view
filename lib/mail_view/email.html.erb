@@ -18,7 +18,7 @@
   }
 
   dt {
-    width: 80px;
+    width: 180px;
     padding: 1px;
     float: left;
     clear: left;
@@ -27,7 +27,7 @@
   }
 
   dd {
-    margin-left: 90px; /* 80px + 10px */
+    margin-left: 190px; /* 80px + 10px */
     padding: 1px;
   }
 
@@ -73,6 +73,12 @@
 
     <dt>Subject:</dt>
     <dd><strong><%= mail.subject %></strong></dd>
+
+    <% mail.header.fields.each do |field| %>
+      <% next if %w(from reply-to to cc subject).include?(field.name.downcase) %>
+      <dt><%= field.name %>:</dt>
+      <dd><%= Rack::Utils.escape_html(field.value.to_s) %></dd>
+    <% end %> 
 
     <% unless mail.attachments.nil? || mail.attachments.empty? %>
       <dt>Attachments:</dt>
