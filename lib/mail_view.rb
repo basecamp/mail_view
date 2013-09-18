@@ -37,7 +37,7 @@ class MailView
       missing_format = ext && format.nil?
 
       if actions.include?(name) && !missing_format
-        mail = build_mail(name)
+        mail = build_mail(name, request)
 
         # Requested a specific bare MIME part. Render it verbatim.
         if part_type = request.params['part']
@@ -97,7 +97,7 @@ class MailView
       end
     end
 
-    def build_mail(name)
+    def build_mail(name, request)
       mail = send(name)
       Mail.inform_interceptors(mail) if defined? Mail
       mail
