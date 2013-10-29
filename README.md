@@ -64,7 +64,7 @@ For Rails³ you can map the app inline in your routes config.
 ```ruby
   # config/routes.rb
   if Rails.env.development?
-    mount MailPreview => 'mail_view'
+    mount MailView => 'mail_view'
   end
 ```
 
