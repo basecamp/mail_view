@@ -13,5 +13,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'tmail',     '~> 1.2'
   s.add_development_dependency 'rake'
 
-  s.files = Dir["#{File.dirname(__FILE__)}/**/*"]
+  s.files = Dir[File.expand_path('../**/*', __FILE__)]
 end
