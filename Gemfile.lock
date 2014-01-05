@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    mail_view (2.0.1)
+    mail_view (2.0.4)
       tilt
 
 GEM

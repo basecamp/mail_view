@@ -123,7 +123,7 @@ var hideOrShowOtherHeaders = function(idToHideOrShow,idOfVerb) {
 
     <% if mail.multipart? %>
       <dd>
-        <select onchange="top.messageBody.location=this.options[this.selectedIndex].value;">
+        <select onchange="document.getElementsByName('messageBody')[0].src=this.options[this.selectedIndex].value;">
           <option value="?part=text%2Fhtml">View as HTML email</option>
           <option value="?part=text%2Fplain">View as plain-text email</option>
         </select>

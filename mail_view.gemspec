@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = 'mail_view'
-  s.version = '2.0.1'
+  s.version = '2.0.4'
   s.author = 'Josh Peek'
   s.email = 'josh@joshpeek.com'
   s.summary = 'Visual email testing'
@@ -13,5 +13,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'tmail',     '~> 1.2'
   s.add_development_dependency 'rake'
 
-  s.files = Dir["#{File.dirname(__FILE__)}/**/*"]
+  s.files = %w(init.rb) + Dir['lib/**/*']
 end
