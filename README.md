@@ -19,7 +19,7 @@ And run `bundle install`.
 Usage
 -----
 
-Since most emails do something interesting with database data, you'll need to write some scenarios to load messages with fake data. Its similar to writing mailer unit tests but you see a visual representation of the output instead.
+Since most emails do something interesting with database data, you'll need to write some scenarios to load messages with fake data. It's similar to writing mailer unit tests but you see a visual representation of the output instead.
 
 ```ruby
   # app/mailers/mail_preview.rb or lib/mail_preview.rb
@@ -48,6 +48,8 @@ Since most emails do something interesting with database data, you'll need to wr
 ```
 
 Methods must return a [Mail][1] or [TMail][2] object. Using ActionMailer, call `Notifier.create_action_name(args)` to return a compatible TMail object. Now on ActionMailer 3.x, `Notifier.action_name(args)` will return a Mail object.
+
+To also mail an actual email, just add "?email=your.email@address.com" to the URL query string. For example, if "http://.../invitation" is a MailPreview path, then "http://.../invitation?email=julia@email.com" will display the MailPreview AND send an actual email to julia@email.com. (Unless overridden, the email's from and to addresses will be the specified address.)
 
 Routing
 -------

@@ -1,6 +1,7 @@
 require 'test/unit'
 require 'rack/test'
 
+require 'mocha/setup'
 require 'mail_view'
 require 'mail'
 require 'tmail'
@@ -197,8 +198,7 @@ class TestMailView < Test::Unit::TestCase
     assert_match 'Another Peek <another@foo.com>', unescaped_body
   end
 
-  def test_html_message
-    get '/html_message'
+  def html_message_asserts
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
     assert_no_match %r(View as), last_response.body
@@ -208,8 +208,21 @@ class TestMailView < Test::Unit::TestCase
     assert_equal '<h1>Hello</h1>', last_response.body
   end
 
-  def test_nested_multipart_message
-    get '/nested_multipart_message'
+  def test_html_message
+    Net::SMTP.expects(:new).never
+    get '/html_message'
+    html_message_asserts
+  end
+
+  def test_html_message_with_email_addr
+    mock_smtp = mock()
+    Net::SMTP.expects(:new).returns(mock_smtp)
+    mock_smtp.expects(:start)
+    get '/html_message?email=barack@whitehouse.gov'
+    html_message_asserts
+  end
+
+  def nested_multipart_message_asserts
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
     assert_match %r(View as), last_response.body
@@ -219,8 +232,21 @@ class TestMailView < Test::Unit::TestCase
     assert_equal '<h1>Hello</h1>', last_response.body
   end
 
-  def test_multipart_alternative
-    get '/multipart_alternative'
+  def test_nested_multipart_message
+    Net::SMTP.expects(:new).never
+    get '/nested_multipart_message'
+    nested_multipart_message_asserts
+  end
+
+  def test_nested_multipart_message_with_email_addr
+    mock_smtp = mock()
+    Net::SMTP.expects(:new).returns(mock_smtp)
+    mock_smtp.expects(:start)
+    get '/nested_multipart_message?email=abe.lincoln@whitehouse.gov'
+    nested_multipart_message_asserts
+  end
+
+  def multipart_alternative_asserts
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
     assert_match 'View as', last_response.body
@@ -230,8 +256,21 @@ class TestMailView < Test::Unit::TestCase
     assert_equal '<h1>This is HTML</h1>', last_response.body
   end
 
-  def test_multipart_alternative_as_html
-    get '/multipart_alternative.html'
+  def test_multipart_alternative
+    Net::SMTP.expects(:new).never
+    get '/multipart_alternative'
+    multipart_alternative_asserts
+  end
+
+  def test_multipart_alternative_with_email_addr
+    mock_smtp = mock()
+    Net::SMTP.expects(:new).returns(mock_smtp)
+    mock_smtp.expects(:start)
+    get '/multipart_alternative?email=g.washington@presidentshouse.gov'
+    multipart_alternative_asserts
+  end
+
+  def multipart_alternative_as_html_asserts
     assert last_response.ok?
     assert_match iframe_src_match('text/html'), last_response.body
     assert_match 'View as', last_response.body
@@ -241,8 +280,21 @@ class TestMailView < Test::Unit::TestCase
     assert_equal '<h1>This is HTML</h1>', last_response.body
   end
 
-  def test_multipart_alternative_as_text
-    get '/multipart_alternative.txt'
+  def test_multipart_alternative_as_html
+    Net::SMTP.expects(:new).never
+    get '/multipart_alternative.html'
+    multipart_alternative_as_html_asserts
+  end
+
+  def test_multipart_alternative_as_html_with_email_addr
+    mock_smtp = mock()
+    Net::SMTP.expects(:new).returns(mock_smtp)
+    mock_smtp.expects(:start)
+    get '/multipart_alternative.html?email=jfk@whitehouse.gov'
+    multipart_alternative_as_html_asserts
+  end
+
+  def multipart_alternative_as_text_asserts
     assert last_response.ok?
     assert_match iframe_src_match('text/plain'), last_response.body
     assert_match 'View as', last_response.body
@@ -250,6 +302,20 @@ class TestMailView < Test::Unit::TestCase
     get '/multipart_alternative.txt?part=text%2Fplain'
     assert last_response.ok?
     assert_equal 'This is plain text', last_response.body
+  end
+
+  def test_multipart_alternative_as_text
+    Net::SMTP.expects(:new).never
+    get '/multipart_alternative.txt'
+    multipart_alternative_as_text_asserts
+  end
+
+  def test_multipart_alternative_as_text_with_email_addr
+    mock_smtp = mock()
+    Net::SMTP.expects(:new).returns(mock_smtp)
+    mock_smtp.expects(:start)
+    get '/multipart_alternative.txt?email=fdr@whitehouse.gov'
+    multipart_alternative_as_text_asserts
   end
 
   def test_multipart_alternative_text_as_default
