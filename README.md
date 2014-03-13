@@ -9,7 +9,7 @@ Install
 Add the gem to your `Gemfile`:
 
 ```ruby
-  gem 'mail_view', :git => 'https://github.com/37signals/mail_view.git'
+  gem 'mail_view', :git => 'https://github.com/basecamp/mail_view.git'
   # or
   gem "mail_view", "~> 2.0.4"
 ```
