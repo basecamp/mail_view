@@ -98,7 +98,11 @@ class MailView
     end
 
     def build_mail(name)
-      mail = send(name)
+      mail = nil
+      ActiveRecord::Base.transaction do
+        mail = send(name)
+        raise ActiveRecord::Rollback
+      end
       Mail.inform_interceptors(mail) if defined? Mail
       mail
     end
