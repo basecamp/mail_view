@@ -22,7 +22,7 @@ class MailView
   end
 
   def call(env)
-    request = Rack::Request.new(env)
+    @request = Rack::Request.new(env)
 
     if request.path_info == "" || request.path_info == "/"
       links = self.actions.map do |action|
@@ -66,6 +66,10 @@ class MailView
   protected
     def actions
       public_methods(false).map(&:to_s).sort - ['call']
+    end
+    
+    def request
+      @request
     end
 
     def email_template

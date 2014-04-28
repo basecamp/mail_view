@@ -17,6 +17,15 @@ class TestMailView < Test::Unit::TestCase
         yield self if block_given?
       end
     end
+    
+    def use_request_params_in_preview
+      locale = request.params['locale']
+      Mail.new do
+        to 'josh@37signals.com'
+        body "Locale: #{locale}"
+        yield self if block_given?
+      end
+    end
 
     def plain_text_message_with_display_names
       Mail.new do
@@ -144,6 +153,11 @@ class TestMailView < Test::Unit::TestCase
     assert_match '/plain_text_message', last_response.body
     assert_match '/html_message', last_response.body
     assert_match '/multipart_alternative', last_response.body
+  end
+  
+  def test_use_request_params_in_preview
+    get '/use_request_params_in_preview?locale=en&part='
+    assert_match 'Locale: en', last_response.body
   end
 
   def test_mounted_index
