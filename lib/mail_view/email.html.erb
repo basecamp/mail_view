@@ -22,7 +22,7 @@
   }
 
   dt {
-    width: 80px;
+    width: 180px;
     padding: 1px;
     float: left;
     clear: left;
@@ -31,16 +31,44 @@
   }
 
   dd {
-    margin-left: 90px; /* 80px + 10px */
+    margin-left: 190px; /* 80px + 10px */
     padding: 1px;
   }
+
+  dd a {
+    color: #000;
+    text-decoration: none;
+  }
+  dd a:hover {
+    text-decoration: underline;
+  }
+
 
   iframe {
     border: 0;
     width: 100%;
     height: 800px;
   }
+
+  .disp-none {
+    display: none;
+  }
 </style>
+<script>
+var hideOrShowOtherHeaders = function(idToHideOrShow,idOfVerb) {
+  var hideOrShow = document.getElementById(idToHideOrShow);
+  var verb = document.getElementById(idOfVerb);
+
+  if (verb.textContent == 'Show') {
+    verb.textContent = 'Hide';
+    hideOrShow.style.display = 'block';
+  }
+  else {
+    verb.textContent = 'Show';
+    hideOrShow.style.display = 'none';
+  }
+}
+</script>
 </head>
 
 <body>
@@ -77,6 +105,18 @@
 
     <dt>Subject:</dt>
     <dd><strong><%= mail.subject %></strong></dd>
+
+    <dt>&nbsp;</dt>
+    <dd>
+      <a href='#' onclick="hideOrShowOtherHeaders('all-other-headers','hide-show-other-headers-verb'); return false"><span id='hide-show-other-headers-verb'>Show</span> additional headers&hellip;</a>
+    </dd>
+    <div id="all-other-headers" class="disp-none">
+      <% mail.header.fields.each do |field| %>
+        <% next if %w(from reply-to to cc subject).include?(field.name.downcase) %>
+        <dt><%= field.name %>:</dt>
+        <dd><%= Rack::Utils.escape_html(field.value.to_s) %></dd>
+      <% end %> 
+    </div>
 
     <% unless mail.attachments.nil? || mail.attachments.empty? %>
       <dt>Attachments:</dt>
