@@ -22,7 +22,7 @@ class MailView
   end
 
   def call(env)
-    request = Rack::Request.new(env)
+    @request = Rack::Request.new(env)
 
     if request.path_info == "" || request.path_info == "/"
       links = self.actions.map do |action|
@@ -67,6 +67,10 @@ class MailView
     def actions
       public_methods(false).map(&:to_s).sort - ['call']
     end
+    
+    def request
+      @request
+    end
 
     def email_template
       Tilt.new(email_template_path)
@@ -110,7 +114,7 @@ class MailView
     end
 
     def part_body_url(part)
-      '?part=%s' % Rack::Utils.escape([part.main_type, part.sub_type].compact.join('/'))
+      "?#{request.params.merge({'part' => [part.main_type, part.sub_type].compact.join('/')}).to_param}"
     end
 
     def find_part(mail, matching_content_type)

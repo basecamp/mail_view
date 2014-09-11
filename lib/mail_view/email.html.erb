@@ -88,8 +88,8 @@
     <% if mail.multipart? %>
       <dd>
         <select onchange="document.getElementsByName('messageBody')[0].src=this.options[this.selectedIndex].value;">
-          <option value="?part=text%2Fhtml">View as HTML email</option>
-          <option value="?part=text%2Fplain">View as plain-text email</option>
+          <option value="?#{ request.params.merge({'part' => 'text/html' }).to_param }">View as HTML email</option>
+          <option value="?#{ request.params.merge({'part' => 'text/plain'}).to_param }">View as plain-text email</option>
         </select>
       </dd>
     <% end %>
