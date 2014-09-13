@@ -12,6 +12,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'mail',      '~> 2.2'
   s.add_development_dependency 'tmail',     '~> 1.2'
   s.add_development_dependency 'rake'
+  s.add_development_dependency 'mocha'
 
   s.files = %w(init.rb) + Dir['lib/**/*']
 end

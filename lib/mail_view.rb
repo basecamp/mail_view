@@ -39,6 +39,14 @@ class MailView
       if actions.include?(name) && !missing_format
         mail = build_mail(name)
 
+        email_addr = get_email_address(request.params["email"])
+        if email_addr
+          sendable = mail.dup
+          sendable[:to] = email_addr
+          sendable[:from] ||= email_addr
+          sendable.deliver
+        end
+
         # Requested a specific bare MIME part. Render it verbatim.
         if part_type = request.params['part']
           if part = find_part(mail, part_type)
@@ -125,5 +133,13 @@ class MailView
       elsif matching_content_type && mail.content_type.to_s.match(matching_content_type)
         mail
       end
+    end
+
+    def get_email_address(params_email)
+      email_regex.match(params_email) ? params_email : nil
+    end
+
+    def email_regex
+      /.+@.+\..+/
     end
 end
