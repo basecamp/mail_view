@@ -32,12 +32,15 @@ Since most emails do something interesting with database data, you'll need to wr
 
 ```ruby
   # app/mailers/mail_preview.rb or lib/mail_preview.rb
+  # for mail_view in rails 4.1, you should inherit your mail from ActionMailer::Preview instead of MailView
+  # and preview your mails from /rails/mailers instead of /mail_view
+  # http://api.rubyonrails.org/v4.1.0/classes/ActionMailer/Base.html#class-ActionMailer::Base-label-Previewing+emails
   class MailPreview < MailView
     # Pull data from existing fixtures
     def invitation
       account = Account.first
       inviter, invitee = account.users[0, 2]
-      Notifier.invitation(inviter, invitee) 
+      Notifier.invitation(inviter, invitee)
     end
 
     # Factory-like pattern
