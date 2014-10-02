@@ -100,10 +100,12 @@ class MailView
     def build_mail(name)
       mail = nil
       ActiveRecord::Base.transaction do
+
         mail = send(name)
+        Mail.inform_interceptors(mail) if defined? Mail
+
         raise ActiveRecord::Rollback
       end
-      Mail.inform_interceptors(mail) if defined? Mail
       mail
     end
 
