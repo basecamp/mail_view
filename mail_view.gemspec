@@ -5,6 +5,7 @@ Gem::Specification.new do |s|
   s.email = 'josh@joshpeek.com'
   s.summary = 'Visual email testing'
   s.homepage = 'https://github.com/37signals/mail_view'
+  s.license = 'MIT'
 
   s.add_dependency 'tilt'
 
