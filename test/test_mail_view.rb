@@ -61,7 +61,7 @@ class TestMailView < Test::Unit::TestCase
       end
     end
 
-    def multipart_alternative_text_default
+    def multipart_alternative_html_default
       Mail.new do
         to 'josh@37signals.com'
 
@@ -252,13 +252,13 @@ class TestMailView < Test::Unit::TestCase
     assert_equal 'This is plain text', last_response.body
   end
 
-  def test_multipart_alternative_text_as_default
-    get '/multipart_alternative_text_default'
+  def test_multipart_alternative_html_as_default
+    get '/multipart_alternative_html_default'
     assert last_response.ok?
-    assert_match iframe_src_match('text/plain'), last_response.body
+    assert_match iframe_src_match('text/html'), last_response.body
     assert_match 'View as', last_response.body
 
-    get '/multipart_alternative_text_default?part=text%2Fplain'
+    get '/multipart_alternative_html_default?part=text%2Fplain'
     assert last_response.ok?
     assert_equal 'This is plain text', last_response.body
   end

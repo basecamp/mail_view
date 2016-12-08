@@ -105,7 +105,7 @@ class MailView
 
     def find_preferred_part(mail, formats)
       found = nil
-      formats.find { |f| found = find_part(mail, f) }
+      formats.compact.find { |f| found = find_part(mail, f) }
       found || mail
     end
 
