@@ -78,6 +78,11 @@
     <dt>Subject:</dt>
     <dd><strong><%= mail.subject %></strong></dd>
 
+    <% if mail.header['X-SMTPAPI'].present? %>
+        <dt>SendGrid Category:</dt>
+        <dd><%= Rack::Utils.escape_html(mail.header['X-SMTPAPI'].to_s) %></dd>
+    <% end %>
+
     <% unless mail.attachments.nil? || mail.attachments.empty? %>
       <dt>Attachments:</dt>
       <dd>
