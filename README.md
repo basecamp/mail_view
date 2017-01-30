@@ -53,6 +53,12 @@ Since most emails do something interesting with database data, you'll need to wr
       user = Struct.new(:email, :name).new('name@example.com', 'Jill Smith')
       mail = UserMailer.forgot_password(user)
     end
+
+    # Use passed in URL parameters
+    def mail_user
+      user = User.find(params['user_id'])
+      mail = UserMailer.say_hi(user)
+    end
   end
 ```
 
